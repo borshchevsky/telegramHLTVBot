@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 import telegram
 
-from settings import GROUP_ID, TEAM, CHECK_PER_TIME
+from settings import GROUP_ID, TEAM
 
 
 # Парсим все матчи со страницы матчей
@@ -57,30 +57,23 @@ def get_russian_twitch_link(match_link):
 
 
 def monitor_matches(context):
-    while True:
-        matches_to_show = []
-        all_matches = parse_hltv_matches()
-        team_matches = check_team(all_matches)
-        if team_matches:
-            for match in team_matches:
-                delta = match[2] - datetime.datetime.now()
-                if datetime.timedelta(hours=0) < delta < datetime.timedelta(hours=24):
-                    matches_to_show.append(match)
-        if matches_to_show:
-            result_string = (
-                    f'*Поддержи {TEAM.upper()} в ближайших матчах:* \n\n'
-                    + '\n\n'.join(f'{match[2].strftime("%H:%M")} \- {match[0]} vs {match[1]}\.  '
-                                  f'{match[3].upper()}\. Турнир: {match[4].replace("-", "")} \.'
-                                  + f' Трансляция: [Twitch]({get_russian_twitch_link(match[5])})'
-                                  * (get_russian_twitch_link(match[5]) != False)
-                                  for match in matches_to_show
-                                  )
-            )
-            context.bot.send_message(GROUP_ID, result_string, parse_mode=telegram.ParseMode.MARKDOWN_V2,
-                             disable_web_page_preview=True)
-        # time.sleep(CHECK_PER_TIME)
-
-
-if __name__ == '__main__':
-    pass
-    # print(check_espada(parse_hltv_matches()))
+    matches_to_show = []
+    all_matches = parse_hltv_matches()
+    team_matches = check_team(all_matches)
+    if team_matches:
+        for match in team_matches:
+            delta = match[2] - datetime.datetime.now()
+            if datetime.timedelta(hours=0) < delta < datetime.timedelta(hours=24):
+                matches_to_show.append(match)
+    if matches_to_show:
+        result_string = (
+                f'*Поддержи {TEAM.upper()} в ближайших матчах:* \n\n'
+                + '\n\n'.join(f'{match[2].strftime("%H:%M")} \- {match[0]} vs {match[1]}\.  '
+                              f'{match[3].upper()}\. Турнир: {match[4].replace("-", "")} \.'
+                              + f' Трансляция: [Twitch]({get_russian_twitch_link(match[5])})'
+                              * (get_russian_twitch_link(match[5]) != False)
+                              for match in matches_to_show
+                              )
+        )
+        context.bot.send_message(GROUP_ID, result_string, parse_mode=telegram.ParseMode.MARKDOWN_V2,
+                                 disable_web_page_preview=True)
