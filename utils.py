@@ -3,15 +3,13 @@ import logging
 import requests
 import time
 from bs4 import BeautifulSoup
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import telegram
 
-from models import Match
+from models import Match, engine
 from settings import GROUP_ID, TEAM, DB_URI
 
 logging.basicConfig(filename='bot.log', level=logging.INFO)
-engine = create_engine(DB_URI, echo=True)
 
 
 # Парсим все матчи со страницы матчей
@@ -85,7 +83,7 @@ def monitor_matches(context):
                 f'*Поддержи {TEAM.upper()} в ближайших матчах:* \n\n'
                 + '\n\n'.join(
                 f'{match.match_time.strftime("%H:%M")} \- {match.team1} vs {match.team2}\. '
-                f'{match.best_of.upper()}\. Турнир: {match.event.replace("-", "")} \.'
+                f'{match.best_of.upper()}\. Турнир: {match.event.replace("-", "").replace(".", " ")} \.'
                 + f' Трансляция: [Twitch]({match.twitch})'
                 * (match.twitch != False)
                 for match in matches

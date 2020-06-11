@@ -2,5 +2,5 @@
 __pycache__/
 bot.log
 base.db
-env/
+venv/
 token_.py
