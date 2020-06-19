@@ -17,7 +17,8 @@ PROXY = {
 
 
 if __name__ == '__main__':
-    bot = Updater(TOKEN, use_context=True, request_kwargs=PROXY)
+    # bot = Updater(TOKEN, use_context=True, request_kwargs=PROXY)
+    bot = Updater(TOKEN, use_context=True)
     dp = bot.dispatcher
     matches_info = bot.job_queue
     matches_info.run_repeating(monitor_matches, interval=INTERVAL, first=0)

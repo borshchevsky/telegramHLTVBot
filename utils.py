@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import sessionmaker
 import telegram
 
-from models import Match, engine
+from models import Base, Match, engine
 from settings import GROUP_ID, TEAM, DB_URI
 
 logging.basicConfig(filename='bot.log', level=logging.INFO)
@@ -77,7 +77,6 @@ def monitor_matches(context):
     session = sessionmaker(engine)()
     now = datetime.datetime.now()
     matches = [match for match in session.query(Match).all() if datetime.timedelta(0) < match.match_time - now < datetime.timedelta(hours=24)]
-    print(matches)
     if matches:
         result_string = (
                 f'*Поддержи {TEAM.upper()} в ближайших матчах:* \n\n'
@@ -160,9 +159,10 @@ def check_and_add_to_db():
         if matches:
             session = sessionmaker(engine)()
             for match in matches:
-                for q in session.query(Match.match_url).all():
-                    if match[5] in q:
-                        break
+                url = match[5]
+                exists = session.query(Match.match_url).filter_by(match_url=url).scalar()
+                if exists:
+                    break
                 else:
                     m = Match(
                         team1=match[0],
@@ -179,5 +179,5 @@ def check_and_add_to_db():
         time.sleep(1800)  # Проверяем матчи раз в 30 минут и добавляем в базу, если появились новые
 
 
-# if __name__ == '__main__':
-#     check_and_add_to_db()
+if __name__ == '__main__':
+    check_and_add_to_db()

@@ -16,3 +16,10 @@ class Match(Base):
     event = Column(String)
     match_url = Column(String, unique=True)
     twitch = Column(String)
+
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    telegram_id = Column(String, unique=True)
+    role = Column(String)
