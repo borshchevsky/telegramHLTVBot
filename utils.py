@@ -78,8 +78,6 @@ def monitor_matches(context):
     now = datetime.datetime.now()
     matches = [match for match in session.query(Match).all() if
                datetime.timedelta(0) < match.match_time - now < datetime.timedelta(hours=24)]
-    print(matches[0].match_time)
-    return
     if matches:
         result_string = (
                 f'*Поддержи {TEAM.upper()} в ближайших матчах:* \n\n'
@@ -167,7 +165,8 @@ def check_and_add_to_db():
                 hltv_match_time = match[2]
                 exists = session.query(Match).filter_by(match_url=url).count()
                 if exists:
-                    db_match_time = session.query(Match).filter_by(match_url=url).all()[0]
+                    db_match = session.query(Match).filter_by(match_url=url).all()[0]
+                    db_match_time = db_match.match_time
                     if hltv_match_time > db_match_time:
                         session.query(Match).filter_by(match_url=url).update({'match_time': hltv_match_time})
                     else:
