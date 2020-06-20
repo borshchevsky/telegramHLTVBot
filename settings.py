@@ -1,7 +1,7 @@
 import os
 
 GROUP_ID = -443926074
-TEAM = 'apeks'
+TEAM = 'vitality'
 INTERVAL = 1800  # раз в сколько времени (в секундах) проверять наличие матчей команды
 
 basedir = os.path.abspath(os.path.dirname(__file__))

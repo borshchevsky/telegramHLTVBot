@@ -62,31 +62,34 @@ def get_russian_twitch_link(match_link):
 
 
 def matches_to_show():
-    matches_to_show = []
+    matches = []
     all_matches = parse_hltv_matches()
     team_matches = check_team(all_matches)
     if team_matches:
         for match in team_matches:
             delta = match[2] - datetime.datetime.now()
             if datetime.timedelta(hours=0) < delta < datetime.timedelta(hours=24):
-                matches_to_show.append(match)
-    return matches_to_show
+                matches.append(match)
+    return matches
 
 
 def monitor_matches(context):
     session = sessionmaker(engine)()
     now = datetime.datetime.now()
-    matches = [match for match in session.query(Match).all() if datetime.timedelta(0) < match.match_time - now < datetime.timedelta(hours=24)]
+    matches = [match for match in session.query(Match).all() if
+               datetime.timedelta(0) < match.match_time - now < datetime.timedelta(hours=24)]
+    print(matches[0].match_time)
+    return
     if matches:
         result_string = (
                 f'*Поддержи {TEAM.upper()} в ближайших матчах:* \n\n'
                 + '\n\n'.join(
-                f'{match.match_time.strftime("%H:%M")} \- {match.team1} vs {match.team2}\. '
-                f'{match.best_of.upper()}\. Турнир: {match.event.replace("-", "").replace(".", " ")} \.'
-                + f' Трансляция: [Twitch]({match.twitch})'
-                * (match.twitch != False)
-                for match in matches
-            )
+            f'{match.match_time.strftime("%H:%M")} \- {match.team1} vs {match.team2}\. '
+            f'{match.best_of.upper()}\. Турнир: {match.event.replace("-", "").replace(".", " ")} \.'
+            + f' Трансляция: [Twitch]({match.twitch})'
+            * (match.twitch != False)
+            for match in matches
+        )
         )
         context.bot.send_message(GROUP_ID, result_string, parse_mode=telegram.ParseMode.MARKDOWN_V2,
                                  disable_web_page_preview=True)
@@ -111,7 +114,7 @@ def run_command(update, context):
     else:
         USERS[user_id] = time.monotonic()
     commands = {
-        '!today': show_today_matches,
+        '!matches': show_today_matches,
         '!insta': show_instagram,
         '!vk': show_vk,
         '!twitch': show_twitch,
@@ -129,7 +132,7 @@ def show_today_matches(context):
         result_string = '*Сегодняшние матчи:* \n\n' + \
                         '\n\n'.join(
                             f'{match[2].strftime("%H:%M")} \- {match[0]} vs {match[1]}\. '
-                            f'{match[3].upper()}\. Турнир: {match[4].replace("-", "")} \.'
+                            f'{match[3].upper()}\. Турнир: {match[4].replace("-", " ").replace(".", " ")} \.'
                             + f' Трансляция: [Twitch]({get_russian_twitch_link(match[5])})'
                             * (get_russian_twitch_link(match[5]) != False)
                             for match in matches
@@ -156,13 +159,19 @@ def show_twitch(context):
 def check_and_add_to_db():
     while True:
         matches = matches_to_show()
+        check_and_delete(matches)
         if matches:
             session = sessionmaker(engine)()
             for match in matches:
                 url = match[5]
-                exists = session.query(Match.match_url).filter_by(match_url=url).scalar()
+                hltv_match_time = match[2]
+                exists = session.query(Match).filter_by(match_url=url).count()
                 if exists:
-                    break
+                    db_match_time = session.query(Match).filter_by(match_url=url).all()[0]
+                    if hltv_match_time > db_match_time:
+                        session.query(Match).filter_by(match_url=url).update({'match_time': hltv_match_time})
+                    else:
+                        break
                 else:
                     m = Match(
                         team1=match[0],
@@ -176,8 +185,25 @@ def check_and_add_to_db():
                     session.add(m)
             session.commit()
             session.close()
-        time.sleep(1800)  # Проверяем матчи раз в 30 минут и добавляем в базу, если появились новые
+            logging.info('New match added.')
+        time.sleep(600)  # Проверяем матчи раз в 10 минут и добавляем в базу, если появились новые
+
+
+def check_and_delete(matches):
+    urls = {match[5] for match in matches}
+    session = sessionmaker(engine)()
+    for db_match in session.query(Match).all():
+        if db_match.match_url not in urls or db_match.match_time < datetime.datetime.now():
+            session.query(Match).filter_by(match_url=db_match.match_url).delete()
+            logging.info(f'Match {db_match.id} deleted.')
+    session.commit()
+    session.close()
 
 
 if __name__ == '__main__':
     check_and_add_to_db()
+    # session = sessionmaker(engine)()
+    # url = 'https://hltv.org/matches/2342090/natus-vincere-vs-vitality-blast-premier-spring-2020-europe-finals'
+    # session.query(Match).filter_by(match_url=url).update({'best_of': 'HUI'})
+    # session.commit()
+    # session.close()
