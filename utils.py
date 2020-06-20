@@ -9,7 +9,12 @@ import telegram
 from models import Base, Match, engine
 from settings import GROUP_ID, TEAM, DB_URI
 
-logging.basicConfig(filename='bot.log', level=logging.INFO)
+logging.basicConfig(
+    filename='bot.log',
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 
 # Парсим все матчи со страницы матчей
@@ -182,9 +187,9 @@ def check_and_add_to_db():
                         twitch=get_russian_twitch_link(match[5])
                     )
                     session.add(m)
+                    logging.info('New match added.')
             session.commit()
             session.close()
-            logging.info('New match added.')
         time.sleep(600)  # Проверяем матчи раз в 10 минут и добавляем в базу, если появились новые
 
 
