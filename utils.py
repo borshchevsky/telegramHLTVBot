@@ -6,8 +6,9 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import sessionmaker
 import telegram
 
-from models import Base, Match, engine
-from settings import GROUP_ID, TEAM, DB_URI
+
+from models import Match, engine
+from settings import CHECK_HLTV_TIMEOUT, GROUP_ID, MSG_TO_CHAT_TIMEOUT, TEAM
 
 logging.basicConfig(
     filename='bot.log',
@@ -172,8 +173,9 @@ def check_and_add_to_db():
                 if exists:
                     db_match = session.query(Match).filter_by(match_url=url).all()[0]
                     db_match_time = db_match.match_time
-                    if hltv_match_time > db_match_time:
+                    if hltv_match_time != db_match_time:
                         session.query(Match).filter_by(match_url=url).update({'match_time': hltv_match_time})
+                        logging.info('Match has changed its time.')
                     else:
                         break
                 else:
@@ -190,7 +192,7 @@ def check_and_add_to_db():
                     logging.info('New match added.')
             session.commit()
             session.close()
-        time.sleep(600)  # Проверяем матчи раз в 10 минут и добавляем в базу, если появились новые
+        time.sleep(CHECK_HLTV_TIMEOUT)  # Проверяем матчи раз в 10 минут и добавляем в базу, если появились новые
 
 
 def check_and_delete(matches):
@@ -199,7 +201,7 @@ def check_and_delete(matches):
     for db_match in session.query(Match).all():
         if db_match.match_url not in urls or db_match.match_time < datetime.datetime.now():
             session.query(Match).filter_by(match_url=db_match.match_url).delete()
-            logging.info(f'Match {db_match.id} deleted.')
+            logging.info(f'Match #{db_match.id} deleted.')
     session.commit()
     session.close()
 

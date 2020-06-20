@@ -1,9 +1,10 @@
 import threading
 from telegram.ext import Updater, MessageHandler, Filters
-from settings import INTERVAL
+from settings import MSG_TO_CHAT_TIMEOUT
 from token_ import TOKEN
 from utils import monitor_matches, run_command, check_and_add_to_db
 
+import logging
 
 def main():
     pass
@@ -17,12 +18,12 @@ PROXY = {
 
 
 if __name__ == '__main__':
-    # bot = Updater(TOKEN, use_context=True, request_kwargs=PROXY)
     bot = Updater(TOKEN, use_context=True)
     dp = bot.dispatcher
     matches_info = bot.job_queue
-    matches_info.run_repeating(monitor_matches, interval=INTERVAL, first=0)
+    matches_info.run_repeating(monitor_matches, interval=MSG_TO_CHAT_TIMEOUT, first=0)
     dp.add_handler(MessageHandler(Filters.text, run_command))
     thread = threading.Thread(target=check_and_add_to_db)
     thread.start()
+
     bot.start_polling()
