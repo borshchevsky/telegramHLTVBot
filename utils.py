@@ -204,12 +204,3 @@ def check_and_delete(matches):
             logging.info(f'Match #{db_match.id} deleted.')
     session.commit()
     session.close()
-
-
-if __name__ == '__main__':
-    check_and_add_to_db()
-    # session = sessionmaker(engine)()
-    # url = 'https://hltv.org/matches/2342090/natus-vincere-vs-vitality-blast-premier-spring-2020-europe-finals'
-    # session.query(Match).filter_by(match_url=url).update({'best_of': 'HUI'})
-    # session.commit()
-    # session.close()
