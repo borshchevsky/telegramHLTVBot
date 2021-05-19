@@ -2,7 +2,7 @@ import os
 
 GROUP_ID = -443926074
 TEAM = 'vitality'
-MSG_TO_CHAT_TIMEOUT = 10  # раз в сколько времени (в секундах) проверять наличие матчей команды
+MSG_TO_CHAT_TIMEOUT = 600  # раз в сколько времени (в секундах) проверять наличие матчей команды
 CHECK_HLTV_TIMEOUT = 1200
 
 basedir = os.path.abspath(os.path.dirname(__file__))
