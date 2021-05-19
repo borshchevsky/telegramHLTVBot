@@ -10,6 +10,7 @@ import telegram
 from models import Match, engine
 from settings import CHECK_HLTV_TIMEOUT, GROUP_ID, MSG_TO_CHAT_TIMEOUT, TEAM
 
+
 logging.basicConfig(
     filename='bot.log',
     level=logging.INFO,
